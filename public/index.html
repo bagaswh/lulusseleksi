@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Data Peserta Lulus UTBK</title>
+
+	<!-- Load required Bootstrap and BootstrapVue CSS -->
+	<link type="text/css" rel="stylesheet" href="//unpkg.com/bootstrap/dist/css/bootstrap.min.css" />
+	<link type="text/css" rel="stylesheet" href="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.min.css" />
+	<link type="text/css" rel="stylesheet" href="css/style.css" />
+
+	<!-- Load polyfills to support older browsers -->
+	<script src="//polyfill.io/v3/polyfill.min.js?features=es2015%2CIntersectionObserver"
+		crossorigin="anonymous"></script>
+
+	<!-- Load Vue followed by BootstrapVue -->
+	<script src="//unpkg.com/vue@latest/dist/vue.min.js"></script>
+	<script src="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.min.js"></script>
+
+	<!-- Load the following for BootstrapVueIcons support -->
+	<script src="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue-icons.min.js"></script>
+
+	<!-- Lodash -->
+	<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.20/lodash.min.js"
+		integrity="sha256-ur/YlHMU96MxHEsy3fHGszZHas7NzH4RQlD4tDVvFhw=" crossorigin="anonymous"></script>
+
+	<!-- Numeral.js -->
+	<script src="//cdnjs.cloudflare.com/ajax/libs/numeral.js/2.0.6/numeral.min.js"></script>
+</head>
+
+<body>
+
+	<div id="app" class="container h-100">
+		<div class="hero p-5">
+			<h1 class="fw-bold text-center">Data kelulusan UTBK</h1>
+		</div>
+
+		<div class="search-box w-50 m-auto">
+
+			<b-input-group class="mb-2 mr-sm-2 mb-sm-0">
+				<template v-slot:prepend>
+					<b-input-group-text>
+						<b-icon icon="search" />
+					</b-input-group-text>
+				</template>
+
+				<b-form-input placeholder="Cari di sini..." v-model="form.searchQuery" debounce="500"></b-form-input>
+			</b-input-group>
+
+		</div>
+
+		<div class="row">
+			<div class="filter-box col-3">
+				<div class="filter-box-header mb-3">
+					<span class="fw-bold" style="font-size: 2rem">Filter</span>
+				</div>
+
+				<div>
+					<b-form-group label="Jumlah item per halaman">
+						<b-form-select v-model="paging.pageSize">
+							<option value="10">10</option>
+							<option value="25">25</option>
+							<option value="50">50</option>
+							<option value="75">75</option>
+							<option value="100">100</option>
+						</b-form-select>
+					</b-form-group>
+				</div>
+
+				<div>
+					<b-form-group label="Jenis seleksi">
+						<b-form-select v-model="filters.selectionTypes.value" :options="filters.selectionTypes.options" />
+					</b-form-group>
+				</div>
+
+				<div>
+					<b-form-group label="Tahun">
+						<div class="mb-2">
+							<label style="font-size: 0.8rem" for="form-min-year">Min. tahun</label>
+							<b-form-input id="form-min-year" v-model="filters.minYear.value" type="number" disabled />
+						</div>
+
+						<div>
+							<label style="font-size: 0.8rem" for="form-max-year">Max. tahun</label>
+							<b-form-input id="form-max-year" v-model="filters.maxYear.value" type="number" disabled />
+						</div>
+					</b-form-group>
+				</div>
+
+
+			</div>
+
+			<div class="col">
+				<div class="data mt-3">
+					<div class="overflow-auto">
+						<div class="row align-items-center m-0">
+							<b-pagination class="col" v-model="paging.page" :total-rows="paging.total" :per-page="paging.pageSize"
+								aria-controls="data-table">
+							</b-pagination>
+
+							<div class="col ml-auto text-right">
+								<b-spinner label="Spinning" v-if="states.isFetchingData"></b-spinner>
+							</div>
+						</div>
+
+						<div class="mb-2" v-if="!states.isFetchingData">
+							Ditemukan <span class="font-weight-bold">{{ formatNumber(paging.total) }}</span> item
+						</div>
+
+						<div style="overflow-y: auto; max-height: 100vh">
+							<b-table id="data-table" :class="{ 'blur': states.isFetchingData }" :fields="tableFields" :items="data"
+								small>
+							</b-table>
+						</div>
+					</div>
+
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- main scripts -->
+	<script src="js/script.js"></script>
+
+</body>
+
+</html>
