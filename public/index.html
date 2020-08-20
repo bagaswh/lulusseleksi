@@ -76,6 +76,18 @@
 				</div>
 
 				<div>
+					<b-form-group label="Universitas">
+						<b-form-select v-model="filters.universities.value" :options="filters.universities.options" />
+					</b-form-group>
+				</div>
+
+				<div>
+					<b-form-group label="Kelompok prodi">
+						<b-form-select v-model="filters.majorsGroup.value" :options="filters.majorsGroup.options" />
+					</b-form-group>
+				</div>
+
+				<div>
 					<b-form-group label="Tahun">
 						<div class="mb-2">
 							<label style="font-size: 0.8rem" for="form-min-year">Min. tahun</label>
@@ -109,9 +121,9 @@
 							Ditemukan <span class="font-weight-bold">{{ formatNumber(paging.total) }}</span> item
 						</div>
 
-						<div style="overflow-y: auto; max-height: 100vh">
-							<b-table id="data-table" :class="{ 'blur': states.isFetchingData }" :fields="tableFields" :items="data"
-								small>
+						<div style="overflow: auto; max-height: 100vh">
+							<b-table id="data-table" responsive :class="{ 'blur': states.isFetchingData }" :fields="tableFields"
+								:items="data" small>
 							</b-table>
 						</div>
 					</div>
