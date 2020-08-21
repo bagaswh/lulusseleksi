@@ -58,13 +58,15 @@ window.addEventListener('load', () => {
 					transformer(data) {
 						let currentUniCode = 0;
 						const transformed = [];
-						data.forEach((item, index) => {
-							if (item.university_code != currentUniCode) {
-								currentUniCode = item.university_code;
-								transformed.push({ header: item.university_name });
-							}
-							transformed.push({ label: item.name, value: item.code });
-						});
+						data
+							.sort((a, b) => a.university_code - b.university_code)
+							.forEach((item, index) => {
+								if (item.university_code != currentUniCode) {
+									currentUniCode = item.university_code;
+									transformed.push({ header: item.university_name });
+								}
+								transformed.push({ label: item.name, value: item.code });
+							});
 						return transformed;
 					},
 				},

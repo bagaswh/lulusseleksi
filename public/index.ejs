@@ -90,7 +90,7 @@
 
 				<div class="mb-3">
 					<multicheckbox :url="urls.URL_API_MAJORS" :search-url="urls.URL_API_MAJORS_SEARCH"
-						:transformer="filters.majors.transformer">
+						:transformer="filters.majors.transformer" v-model="filters.majors.value">
 						<template v-slot:header>
 							<div class="p-2">
 								<span class="d-inline-block font-weight-bold">
