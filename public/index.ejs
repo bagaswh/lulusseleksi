@@ -15,8 +15,13 @@
 	<script src="//polyfill.io/v3/polyfill.min.js?features=es2015%2CIntersectionObserver"
 		crossorigin="anonymous"></script>
 
+	<!-- Vue Select -->
+	<script src="https://unpkg.com/vue-select@latest"></script>
+	<link rel="stylesheet" href="https://unpkg.com/vue-select@latest/dist/vue-select.css">
+
 	<!-- Load Vue followed by BootstrapVue -->
-	<script src="//unpkg.com/vue@latest/dist/vue.min.js"></script>
+	<!-- <script src="//unpkg.com/vue@latest/dist/vue.min.js"></script> -->
+	<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 	<script src="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.min.js"></script>
 
 	<!-- Load the following for BootstrapVueIcons support -->
@@ -52,42 +57,58 @@
 		</div>
 
 		<div class="row">
-			<div class="filter-box col-3">
+			<div class="filter-box col-4">
 				<div class="filter-box-header mb-3">
 					<span class="fw-bold" style="font-size: 2rem">Filter</span>
 				</div>
 
-				<div>
+				<div class="mb-3">
 					<b-form-group label="Jumlah item per halaman">
-						<b-form-select v-model="paging.pageSize">
-							<option value="10">10</option>
-							<option value="25">25</option>
-							<option value="50">50</option>
-							<option value="75">75</option>
-							<option value="100">100</option>
-						</b-form-select>
+						<v-select v-model="paging.pageSize" placeholder="Pilih jumlah item per halaman" :options="paging.pages" />
 					</b-form-group>
 				</div>
 
-				<div>
+				<div class="mb-3">
 					<b-form-group label="Jenis seleksi">
-						<b-form-select v-model="filters.selectionTypes.value" :options="filters.selectionTypes.options" />
+						<v-select v-model="filters.selectionTypes.value" placeholder="Pilih jalur seleksi"
+							:reduce="type => type.value" :options="filters.selectionTypes.options" />
 					</b-form-group>
 				</div>
 
-				<div>
-					<b-form-group label="Universitas">
-						<b-form-select v-model="filters.universities.value" :options="filters.universities.options" />
-					</b-form-group>
+				<div class="mb-3">
+					<multicheckbox :url="urls.URL_API_UNIVERSITIES" :search-url="urls.URL_API_UNIVERSITIES_SEARCH"
+						:transformer="filters.universities.transformer" v-model="filters.universities.value">
+						<template v-slot:header>
+							<div class="p-2">
+								<span class="d-inline-block font-weight-bold">
+									Universitas
+								</span>
+							</div>
+						</template>
+					</multicheckbox>
 				</div>
 
-				<div>
+				<div class="mb-3">
+					<multicheckbox :url="urls.URL_API_MAJORS" :search-url="urls.URL_API_MAJORS_SEARCH"
+						:transformer="filters.majors.transformer">
+						<template v-slot:header>
+							<div class="p-2">
+								<span class="d-inline-block font-weight-bold">
+									Prodi
+								</span>
+							</div>
+						</template>
+					</multicheckbox>
+				</div>
+
+				<div class="mb-3">
 					<b-form-group label="Kelompok prodi">
-						<b-form-select v-model="filters.majorsGroup.value" :options="filters.majorsGroup.options" />
+						<v-select v-model="filters.majorsGroup.value" placeholder="Pilih kelompok prodi"
+							:reduce="group => group.value" :options="filters.majorsGroup.options" />
 					</b-form-group>
 				</div>
 
-				<div>
+				<div class="mb-3">
 					<b-form-group label="Tahun">
 						<div class="mb-2">
 							<label style="font-size: 0.8rem" for="form-min-year">Min. tahun</label>
@@ -133,9 +154,12 @@
 		</div>
 	</div>
 
+	<!-- Homemade components -->
+	<%- include('vue-components/infinite-select'); %>
+	<%- include('vue-components/multicheckbox'); %>
+
 	<!-- main scripts -->
 	<script src="js/script.js"></script>
-
 </body>
 
 </html>

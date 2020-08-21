@@ -1,19 +1,36 @@
 window.addEventListener('load', () => {
 	const URL_API_DATA = window.location.href + 'api/hasil';
 	const URL_API_DATA_SEARCH = window.location.href + 'api/hasil/search';
-	const URL_API_UNIVERSITIES = window.location.href + 'api/universities';
 
-	function fetchJSON(url, opts) {
-		return fetch(url).then((res) => res.json());
-	}
+	const URL_API_UNIVERSITIES = window.location.href + 'api/universities';
+	const URL_API_UNIVERSITIES_SEARCH =
+		window.location.href + 'api/universities/search';
+
+	const URL_API_MAJORS = window.location.href + 'api/majors';
+	const URL_API_MAJORS_SEARCH = window.location.href + 'api/majors/search';
 
 	Vue.mixin({
+		data: () => ({
+			urls: {
+				URL_API_UNIVERSITIES,
+				URL_API_UNIVERSITIES_SEARCH,
+				URL_API_MAJORS,
+				URL_API_MAJORS_SEARCH,
+			},
+		}),
+
 		methods: {
 			formatNumber(number) {
 				return numeral(number).format('0,0');
 			},
+
+			fetchJSON,
 		},
 	});
+
+	Vue.component('v-select', VueSelect.VueSelect);
+	Vue.component('infinite-select', InfiniteSelect);
+	Vue.component('multicheckbox', MultiCheckbox);
 
 	const app = new Vue({
 		el: '#app',
@@ -21,25 +38,46 @@ window.addEventListener('load', () => {
 			filters: {
 				selectionTypes: {
 					options: [
-						{ value: null, text: 'Pilih jenis seleksi' },
-						{ value: 1, text: 'SBMPTN' },
-						{ value: 2, text: 'SNMPTN' },
+						{ value: 1, label: 'SBMPTN' },
+						{ value: 2, label: 'SNMPTN' },
 					],
 					value: null,
 				},
 
 				majorsGroup: {
 					options: [
-						{ value: null, text: 'Pilih kelompok prodi' },
-						{ value: 1, text: 'SOSHUM' },
-						{ value: 2, text: 'SAINTEK' },
+						{ value: 1, label: 'SOSHUM' },
+						{ value: 2, label: 'SAINTEK' },
 					],
 					value: null,
 				},
 
-				universities: {
-					options: [{ value: null, text: 'Pilih universitas' }],
+				majors: {
+					options: [],
 					value: null,
+					transformer(data) {
+						let currentUniCode = 0;
+						const transformed = [];
+						data.forEach((item, index) => {
+							if (item.university_code != currentUniCode) {
+								currentUniCode = item.university_code;
+								transformed.push({ header: item.university_name });
+							}
+							transformed.push({ label: item.name, value: item.code });
+						});
+						return transformed;
+					},
+				},
+
+				universities: {
+					options: [],
+					value: null,
+					transformer(data) {
+						return data.map((item) => ({
+							label: item.name,
+							value: item.code,
+						}));
+					},
 				},
 
 				minYear: {
@@ -52,6 +90,7 @@ window.addEventListener('load', () => {
 			},
 
 			paging: {
+				pages: [10, 25, 50, 75, 100, 200, 300],
 				page: 1,
 				pageSize: 10,
 				total: 0,
@@ -100,22 +139,16 @@ window.addEventListener('load', () => {
 		},
 
 		watch: {
-			paging: {
-				handler(val) {
-					this.getAndPopulateDataHasil();
-				},
-				deep: true,
+			'paging.page': function () {
+				this.getAndPopulateDataHasil();
 			},
 
-			'filters.selectionTypes': {
-				handler(val) {
-					this.getAndPopulateDataHasil();
-				},
-				deep: true,
+			'paging.pageSize': function () {
+				this.getAndPopulateDataHasil();
 			},
 
-			'filters.majorsGroup': {
-				handler(val) {
+			filters: {
+				handler() {
 					this.getAndPopulateDataHasil();
 				},
 				deep: true,
@@ -128,13 +161,6 @@ window.addEventListener('load', () => {
 
 		async created() {
 			this.getAndPopulateDataHasil();
-			await this.populateUniversities();
-
-			this.$watch(
-				'filters.universities',
-				() => this.getAndPopulateDataHasil(),
-				{ deep: true }
-			);
 		},
 
 		methods: {
@@ -146,6 +172,7 @@ window.addEventListener('load', () => {
 					pageSize: 'page_size',
 					universities: 'univ.code',
 					majorsGroup: 'majors.group',
+					majors: 'majors.code',
 				};
 				return map[key];
 			},
@@ -169,10 +196,12 @@ window.addEventListener('load', () => {
 					if (!mappedKey || !realValue) {
 						return;
 					}
-					if (typeof value == 'object') {
-						url.searchParams.append(mappedKey, value.value);
+					if (Array.isArray(realValue)) {
+						realValue.forEach((item) => {
+							url.searchParams.append(mappedKey, item);
+						});
 					} else {
-						url.searchParams.append(mappedKey, value);
+						url.searchParams.append(mappedKey, realValue);
 					}
 				});
 
@@ -187,32 +216,6 @@ window.addEventListener('load', () => {
 
 					this.states.isFetchingData = false;
 				});
-			},
-
-			async populateUniversities() {
-				const url = new URL(URL_API_UNIVERSITIES);
-				let page = 1;
-				let pageSize = 100;
-				while (true) {
-					url.searchParams.set('page', page);
-					url.searchParams.set('page_size', pageSize);
-
-					const json = await fetchJSON(url);
-					this.filters.universities.options.push(
-						...json.records.map((record) => ({
-							value: record.code,
-							text: record.name,
-						}))
-					);
-
-					if (
-						this.filters.universities.options.length >= json.metadata.total_rows
-					) {
-						break;
-					}
-
-					page++;
-				}
 			},
 
 			transformData(data) {

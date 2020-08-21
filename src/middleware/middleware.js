@@ -7,7 +7,7 @@ function paging(req, res, next) {
 		req.query
 	);
 	const page = Math.max(_page, 1);
-	const pageSize = Math.max(0, Math.min(_page_size, 100));
+	const pageSize = Math.max(0, Math.min(_page_size, 300));
 
 	data.offset = page * pageSize - (pageSize - 1) - 1;
 	data.limit = pageSize;
@@ -15,5 +15,7 @@ function paging(req, res, next) {
 
 	return next();
 }
+
+function parseQsArray(req, res, next) {}
 
 module.exports = { paging };

@@ -1,0 +1,190 @@
+<style>
+	.multicheckbox {}
+</style>
+
+<script type="text/x-template" id="multicheckbox">
+<div class="multicheckbox">
+	<b-card no-body class="m-0 mb-1 p-0">
+		<b-card-header header-tag="header" class="p-1" v-b-toggle="accordionId" role="tab">
+			<slot name="header"></slot>
+		</b-card-header>
+
+		<b-collapse :id="accordionId" visible accordion="my-accordion" role="tabpanel"
+			style="max-height: 100vh; overflow: auto">
+			<b-card-body>
+				<b-input-group class="mb-4">
+					<template v-slot:prepend>
+						<b-input-group-text>
+							<b-icon icon="search" />
+						</b-input-group-text>
+					</template>
+
+					<b-form-input placeholder="Cari di sini..." v-model="searchQuery" debounce="500"></b-form-input>
+				</b-input-group>
+
+				<div class="navigation mb-3">
+					<b-button-group class="w-100">
+						<b-button :disabled="!hasPrevPage" @click="prevPage">
+							<b-icon icon="arrow-left-circle" />
+						</b-button>
+						
+						<b-button :disabled="!hasNextPage" @click="nextPage">
+							<b-icon icon="arrow-right-circle" />
+						</b-button>
+					</b-button-group>
+				</div>
+
+				<b-form-group>
+					<b-form-checkbox-group v-model="checked" name="checkbox-value">
+						<div v-if="!dataValues.length && !states.isFetchingData">
+							Tidak ada data ditemukan
+							<span v-if="searchQuery">
+								untuk kata kunci <span class="font-weight-bold"> {{ searchQuery }} </span>
+							</span>
+						</div>
+
+						<div class="text-center">
+							<b-spinner label="Spinning" class="m-auto text-center" v-if="states.isFetchingData"></b-spinner>
+						</div>
+
+						<div v-for="item in dataValues">
+							<span class="d-block mt-2 font-weight-bold" v-if="item.header">
+								{{ item.header }}
+							</span>
+							<b-form-checkbox v-else :value="item.value" :key="item.value">{{ item.label }}</b-form-checkbox>
+						</div>
+					</b-form-checkbox-group>
+				</b-form-group>
+			</b-card-body>
+		</b-collapse>
+
+	</b-card>
+</div>
+</script>
+
+<script>
+	function fetchJson(url, opts = {}) {
+		return fetch(url, opts).then(res => res.json());
+	}
+
+	const MultiCheckbox = {
+		template: '#multicheckbox',
+		props: {
+			value: Array,
+
+			url: String,
+			searchUrl: String,
+			ajaxDataFilter: Object,
+			ajaxDataSrc: String,
+			transformer: Function,
+
+			cache: {
+				type: Boolean,
+				default() {
+					return true
+				}
+			},
+			data: Array
+		},
+
+		data: () => ({
+			accordionId: 'accordion-' + btoa(Date.now()),
+			searchQuery: '',
+			values: [],
+			searchResult: [],
+			checked: [],
+			states: {
+				isFetchingData: false
+			},
+			paging: {
+				page: 1,
+				pageSize: 100,
+				total: 0
+			}
+		}),
+
+		computed: {
+			dataValues() {
+				const data = (this.searchQuery ? this.searchResult : null) || this.data || this.values;
+				return this.transformer(data) || data.map((item) => {
+					return { value: item.value, label: item.label };
+				})
+			},
+
+			searchEnabled() {
+				return this.searchUrl || this.enableSearch;
+			},
+
+			hasPrevPage() {
+				return this.paging.page > 1;
+			},
+
+			hasNextPage() {
+				return !((this.paging.page * this.paging.pageSize) >= this.paging.total);
+			}
+		},
+
+		watch: {
+			checked(val) {
+				this.$emit('input', val);
+			},
+
+			searchQuery(val) {
+				if (val) {
+					this.fetch();
+				} else {
+					this.searchResult = [];
+				}
+			},
+
+			'paging.page': function (val) {
+				this.fetch();
+			}
+		},
+
+		created() {
+			if (this.url) {
+				this.fetch();
+			}
+		},
+
+		methods: {
+			async fetch() {
+				const url = new URL(this.searchQuery ? this.searchUrl : this.url);
+				url.searchParams.set('page', this.paging.page);
+				url.searchParams.set('page_size', this.paging.pageSize);
+				if (this.searchQuery) {
+					url.searchParams.set('q', this.searchQuery);
+				}
+				if (this.ajaxDataFilter) {
+					Object.entries(ajaxDataFilter).forEach(([key, value]) => {
+						url.searchParams.set(key, value);
+					});
+				}
+
+				this.states.isFetchingData = true;
+				const json = await fetchJson(url);
+				this.states.isFetchingData = false;
+
+				if (this.searchQuery) {
+					this.searchResult = json[this.ajaxDataSrc || 'records'];
+				} else {
+					this.values = json[this.ajaxDataSrc || 'records'];
+				}
+				this.paging.total = json.metadata.total_rows;
+			},
+
+			prevPage() {
+				if (this.hasPrevPage) {
+					this.paging.page--;
+				}
+			},
+
+			nextPage() {
+				if (this.hasNextPage) {
+					this.paging.page++;
+				}
+			}
+		}
+	};
+</script>

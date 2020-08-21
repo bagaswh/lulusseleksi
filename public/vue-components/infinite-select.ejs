@@ -1,0 +1,119 @@
+<script type="text/x-template" id="v-select-template">
+  <v-select
+    :options="options"
+		:reduce="item => item.value"
+		:placeholder="placeholder"
+		@search="onSearch"
+		@input="updateValue"
+  >
+    <template #list-footer>
+			<li slot="list-footer" class="pagination">
+				<button @click="prevPage" :disabled="!hasPrevPage">Sebelumnya</button>
+				<button @click="nextPage" :disabled="!hasNextPage">Selanjutnya</button>
+			</li>
+		
+      <li ref="load" class="loader text-center" v-show="hasNextPage">
+        Loading more options...
+      </li>
+    </template>
+  </v-select>
+</script>
+
+<script>
+
+	function fetchJSON(url, opts) {
+		return fetch(url).then((res) => res.json());
+	}
+
+	const InfiniteSelect = {
+		props: ['value', 'placeholder', 'url', 'searchUrl', 'labelKey', 'valueKey', 'transformer'],
+		template: '#v-select-template',
+
+		data: () => ({
+			observer: null,
+			options: [],
+			paging: {
+				page: 1,
+				pageSize: 10,
+				total: 0
+			},
+		}),
+
+		created() {
+			this.fetch();
+		},
+
+		mounted() {
+		},
+
+		computed: {
+			hasNextPage() {
+				return !((this.paging.page * this.paging.pageSize) >= this.paging.total);
+			},
+
+			hasPrevPage() {
+				return this.paging.page > 1;
+			},
+
+		},
+
+		methods: {
+			prevPage() {
+				if (this.hasPrevPage) {
+					this.paging.page--;
+					this.fetch();
+				}
+			},
+
+			nextPage() {
+				if (this.hasNextPage) {
+					this.paging.page++;
+					this.fetch();
+				}
+			},
+
+			updateValue(val) {
+				this.$emit('input', val);
+			},
+
+			onSearch(q, loading) {
+				this.options = [];
+				this.paging.page = 1;
+				if (q) {
+					this.search(q, loading, this);
+				} else {
+					this.fetch();
+				}
+			},
+
+			search: _.debounce((q, loading, vm) => {
+				vm.fetch({ q });
+			}),
+
+			fetch(data = {}) {
+				const url = new URL(data.q ? this.searchUrl : this.url);
+				if (data.q) {
+					url.searchParams.append('q', data.q);
+				}
+				url.searchParams.append('page', this.paging.page);
+				url.searchParams.append('page_size', this.paging.pageSize);
+				return fetchJSON(url).then(json => {
+					this.options = this.toOptionsData(json.records);
+					this.paging.total = json.metadata.total_rows;
+					return Promise.resolve();
+				});
+			},
+
+			toOptionsData(data) {
+				if (this.transformer) {
+					return data.map(this.transformer);
+				}
+				return data.map(item => ({
+					label: item.label || item[this.labelKey],
+					value: item.value || item[this.valueKey]
+				}));
+			},
+		}
+	};
+
+</script>
