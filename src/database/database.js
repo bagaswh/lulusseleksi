@@ -5,6 +5,14 @@ const DB_NAME = config.getConfig('DB_NAME');
 const DB_USER = config.getConfig('DB_USER');
 const DB_PASSWORD = config.getConfig('DB_PASSWORD');
 
+console.log(
+	'initializing database with configuration:',
+	DB_HOST,
+	DB_NAME,
+	DB_USER,
+	DB_PASSWORD
+);
+
 const knex = require('knex')({
 	client: 'mysql2',
 	connection: {
