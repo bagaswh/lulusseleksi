@@ -1,10 +1,18 @@
-const config = require('config');
+const config = require('../configutils');
 
-const dbConfig = config.get('dbConfig');
+const DB_HOST = config.getConfig('DB_HOST');
+const DB_NAME = config.getConfig('DB_NAME');
+const DB_USER = config.getConfig('DB_USER');
+const DB_PASSWORD = config.getConfig('DB_PASSWORD');
 
 const knex = require('knex')({
 	client: 'mysql2',
-	connection: dbConfig,
+	connection: {
+		host: DB_HOST,
+		user: DB_USER,
+		password: DB_PASSWORD,
+		database: DB_NAME,
+	},
 });
 
 module.exports = knex;

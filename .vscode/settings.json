@@ -1,0 +1,8 @@
+{
+    "appService.zipIgnorePattern": [
+        "node_modules{,/**}",
+        ".vscode{,/**}"
+    ],
+    "appService.defaultWebAppToDeploy": "/subscriptions/a3c8329b-9e87-4ca0-bfff-3c8c842919dd/resourceGroups/appsvc_linux_centralus/providers/Microsoft.Web/sites/lulusseleksi",
+    "appService.deploySubpath": "."
+}

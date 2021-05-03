@@ -11,10 +11,11 @@
 	"license": "ISC",
 	"dependencies": {
 		"config": "^3.3.1",
+		"dotenv": "^8.2.0",
 		"ejs": "^3.1.5",
 		"express": "^4.17.1",
 		"knex": "^0.21.5",
-		"lodash": "^4.17.20",
+		"lodash": "^4.17.21",
 		"morgan": "^1.10.0",
 		"mysql2": "^2.1.0"
 	},
